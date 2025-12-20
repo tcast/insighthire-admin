@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  experimental: {
+    // Force all pages to be dynamic (no static generation)
+    isrMemoryCacheSize: 0,
+  },
   typescript: {
     ignoreBuildErrors: true, // Skip TS errors during build
   },
