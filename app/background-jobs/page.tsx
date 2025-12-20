@@ -185,9 +185,9 @@ export default function BackgroundJobsAdmin() {
             <select
               value={filters.jobType}
               onChange={(e) => setFilters(prev => ({ ...prev, jobType: e.target.value as any }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
-              <option value="">All Types</option>
+              <option value="" className="text-gray-900">All Types</option>
               <option value="transcription">Transcription</option>
               <option value="scoring">Scoring</option>
               <option value="video_generation">Video Generation</option>
@@ -202,9 +202,9 @@ export default function BackgroundJobsAdmin() {
             <select
               value={filters.organizationId}
               onChange={(e) => setFilters(prev => ({ ...prev, organizationId: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
-              <option value="">All Organizations</option>
+              <option value="" className="text-gray-900">All Organizations</option>
               {uniqueOrgs.map(orgId => {
                 const job = (failedData?.jobs as FailedJob[] || []).find(j => j.organizationId === orgId);
                 return (
@@ -224,9 +224,9 @@ export default function BackgroundJobsAdmin() {
             <select
               value={filters.questionId}
               onChange={(e) => setFilters(prev => ({ ...prev, questionId: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
-              <option value="">All Questions</option>
+              <option value="" className="text-gray-900">All Questions</option>
               {uniqueQuestions.map(qId => {
                 const job = (failedData?.jobs as FailedJob[] || []).find(j => j.questionId === qId);
                 return (
@@ -246,9 +246,9 @@ export default function BackgroundJobsAdmin() {
             <select
               value={filters.assessmentId}
               onChange={(e) => setFilters(prev => ({ ...prev, assessmentId: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
-              <option value="">All Assessments</option>
+              <option value="" className="text-gray-900">All Assessments</option>
               {uniqueAssessments.map(aId => {
                 const job = (failedData?.jobs as FailedJob[] || []).find(j => j.assessmentId === aId);
                 return (
@@ -268,9 +268,9 @@ export default function BackgroundJobsAdmin() {
             <select
               value={filters.journeyId}
               onChange={(e) => setFilters(prev => ({ ...prev, journeyId: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
-              <option value="">All Journeys</option>
+              <option value="" className="text-gray-900">All Journeys</option>
               {uniqueJourneys.map(jId => {
                 const job = (failedData?.jobs as FailedJob[] || []).find(j => j.journeyId === jId);
                 return (
