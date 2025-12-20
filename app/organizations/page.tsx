@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { useAdminAuth } from '@/lib/use-admin-auth';
@@ -18,6 +18,20 @@ export default function PlatformAdminOrganizationsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [planFilter, setPlanFilter] = useState<string>('');
+  const [adminEmail, setAdminEmail] = useState<string>('');
+
+  // Load admin email from localStorage safely
+  useEffect(() => {
+    const user = localStorage.getItem('admin_user');
+    if (user) {
+      try {
+        const parsed = JSON.parse(user);
+        setAdminEmail(parsed.email || '');
+      } catch (e) {
+        console.error('Failed to parse admin_user');
+      }
+    }
+  }, []);
 
   const { data, isLoading, error } = trpc.platformAdmin.listOrganizations.useQuery({
     page: 1,
@@ -53,9 +67,11 @@ export default function PlatformAdminOrganizationsPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                👤 {typeof window !== "undefined" && typeof window !== "undefined" && localStorage.getItem('admin_user') && JSON.parse(typeof window !== "undefined" && typeof window !== "undefined" && localStorage.getItem('admin_user')!).email}
-              </span>
+              {adminEmail && (
+                <span className="text-sm text-gray-600">
+                  👤 {adminEmail}
+                </span>
+              )}
               <button
                 onClick={() => {
                   typeof window !== "undefined" && typeof window !== "undefined" && localStorage.clear();
