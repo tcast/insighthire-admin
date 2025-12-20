@@ -11,6 +11,8 @@ RUN npm install
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Ensure public directory exists for Next.js
+RUN mkdir -p public
 
 # Set production env
 ENV NODE_ENV production
@@ -42,8 +44,7 @@ COPY --from=builder /app/package.json ./
 # Copy built app
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# Copy public folder if it exists
-COPY --from=builder /app/public ./public || true
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
