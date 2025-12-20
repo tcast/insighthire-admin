@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { trpc } from '../../lib/trpc';
+import { trpc } from '@/lib/trpc';
 import Link from 'next/link';
 import {
   BuildingOfficeIcon,
