@@ -5,11 +5,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Mail, Building2, Activity, BarChart3, Shield, LogOut } from 'lucide-react';
 
 const navItems = [
-  { name: 'Dashboard', href: '/platform-admin', icon: Activity },
-  { name: 'Leads', href: '/platform-admin/leads', icon: Mail },
-  { name: 'Organizations', href: '/platform-admin/organizations', icon: Building2 },
-  { name: 'API Monitoring', href: '/platform-admin/api-monitoring', icon: BarChart3 },
-  { name: 'Audit', href: '/platform-admin/audit', icon: Shield },
+  { name: 'Dashboard', href: '/', icon: Activity },
+  { name: 'Leads', href: '/leads', icon: Mail },
+  { name: 'Organizations', href: '/organizations', icon: Building2 },
+  { name: 'API Monitoring', href: '/api-monitoring', icon: BarChart3 },
+  { name: 'Audit', href: '/audit', icon: Shield },
 ];
 
 export function PlatformAdminNav() {
@@ -17,9 +17,11 @@ export function PlatformAdminNav() {
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    router.push('/platform-admin/login');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+    }
+    router.push('/login');
   };
 
   return (
