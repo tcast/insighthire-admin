@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { trpc, trpcClient } from '@/lib/trpc';
-import { AuthenticatedLayout } from '@/components/layout/authenticated-layout';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -37,9 +36,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <AuthenticatedLayout>
-          {children}
-        </AuthenticatedLayout>
+        {children}
       </trpc.Provider>
     </QueryClientProvider>
   );
