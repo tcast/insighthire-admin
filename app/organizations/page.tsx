@@ -1,0 +1,223 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { trpc } from '../../../lib/trpc';
+import {
+  MagnifyingGlassIcon,
+  BuildingOfficeIcon,
+  UsersIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline';
+
+export default function PlatformAdminOrganizationsPage() {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [planFilter, setPlanFilter] = useState<string>('');
+
+  // Use admin_token instead of auth_token for API calls
+  const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+
+  const { data, isLoading, error } = trpc.platformAdmin.listOrganizations.useQuery({
+    page: 1,
+    search: search || undefined,
+    status: statusFilter as any || undefined,
+    plan: planFilter as any || undefined,
+  }, {
+    context: {
+      skipBatch: true,
+    },
+  });
+
+  if (!localStorage.getItem('admin_token')) {
+    window.location.href = '/platform-admin/login';
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <BuildingOfficeIcon className="h-8 w-8 text-blue-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
+                <p className="text-sm text-gray-600">Platform Administration</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                👤 {localStorage.getItem('admin_user') && JSON.parse(localStorage.getItem('admin_user')!).email}
+              </span>
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.href = '/platform-admin/login';
+                }}
+                className="text-sm text-red-600 hover:text-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search organizations..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Statuses</option>
+              <option value="TRIAL">Trial</option>
+              <option value="ACTIVE">Active</option>
+              <option value="PAST_DUE">Past Due</option>
+              <option value="CANCELED">Canceled</option>
+            </select>
+            <select
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Plans</option>
+              <option value="TRIAL">Trial</option>
+              <option value="STARTER">Starter</option>
+              <option value="PROFESSIONAL">Professional</option>
+              <option value="ENTERPRISE">Enterprise</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Organizations Table */}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            Error: {error.message}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Organization
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Plan
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Users
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Candidates
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data?.organizations.map((org) => (
+                  <tr key={org.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {org.name || '(Onboarding incomplete)'}
+                        </div>
+                        <div className="text-sm text-gray-500">{org.domain}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {org.subscriptionPlan}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(org.subscriptionStatus)}`}>
+                        {org.subscriptionStatus}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <UsersIcon className="h-4 w-4 text-gray-400 mr-1" />
+                        {org._count.users}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <ChartBarIcon className="h-4 w-4 text-gray-400 mr-1" />
+                        {org._count.candidate_profiles}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {new Date(org.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <Link
+                        href={`/platform-admin/organizations/${org.id}`}
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        View Details
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {data && data.total > 20 && (
+              <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{data.organizations.length}</span> of{' '}
+                  <span className="font-medium">{data.total}</span> organizations
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'ACTIVE':
+      return 'bg-green-100 text-green-800';
+    case 'TRIAL':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'PAST_DUE':
+      return 'bg-orange-100 text-orange-800';
+    case 'CANCELED':
+    case 'EXPIRED':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}

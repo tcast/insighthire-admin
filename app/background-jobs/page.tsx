@@ -1,0 +1,600 @@
+'use client';
+
+import { useState } from 'react';
+import { trpc } from '@/lib/trpc';
+import {
+  FunnelIcon,
+  ArrowPathIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from '@heroicons/react/24/outline';
+
+interface FailedJob {
+  id: string;
+  type: string;
+  responseId: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail?: string;
+  organizationId?: string;
+  organizationName?: string;
+  questionId?: string;
+  questionText?: string;
+  assessmentId?: string;
+  assessmentName?: string;
+  journeyId?: string;
+  journeyName?: string;
+  positionId?: string;
+  positionTitle?: string;
+  error: string;
+  failedAt: string;
+  retryCount: number;
+  metadata?: any;
+}
+
+export default function BackgroundJobsAdmin() {
+  const [activeTab, setActiveTab] = useState<'failed' | 'pending' | 'completed'>('failed');
+  const [retrying, setRetrying] = useState<Set<string>>(new Set());
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
+
+  // Filters
+  const [filters, setFilters] = useState({
+    organizationId: '',
+    questionId: '',
+    assessmentId: '',
+    journeyId: '',
+    jobType: '' as '' | 'transcription' | 'scoring' | 'video_generation',
+    searchText: '',
+  });
+
+  // Get failed jobs
+  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed } = trpc.admin.getFailedJobs.useQuery(undefined, {
+    enabled: activeTab === 'failed'
+  });
+
+  // Get pending jobs
+  const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.admin.getPendingJobs.useQuery(undefined, {
+    enabled: activeTab === 'pending'
+  });
+
+  // Get completed jobs
+  const { data: completedData, refetch: refetchCompleted, isLoading: loadingCompleted } = trpc.admin.getCompletedJobs.useQuery(undefined, {
+    enabled: activeTab === 'completed'
+  });
+
+  const retryMutation = trpc.admin.retryTranscription.useMutation();
+
+  const retryTranscription = async (responseId: string) => {
+    setRetrying(prev => new Set(prev).add(responseId));
+    try {
+      await retryMutation.mutateAsync({ responseId });
+      setTimeout(() => {
+        refetchFailed();
+        setRetrying(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(responseId);
+          return newSet;
+        });
+      }, 2000);
+    } catch (error) {
+      console.error('Retry failed:', error);
+      alert('Retry failed: ' + (error as Error).message);
+      setRetrying(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(responseId);
+        return newSet;
+      });
+    }
+  };
+
+  // Apply filters to jobs
+  const filterJobs = (jobs: FailedJob[] | undefined) => {
+    if (!jobs) return [];
+
+    return jobs.filter(job => {
+      if (filters.organizationId && job.organizationId !== filters.organizationId) return false;
+      if (filters.questionId && job.questionId !== filters.questionId) return false;
+      if (filters.assessmentId && job.assessmentId !== filters.assessmentId) return false;
+      if (filters.journeyId && job.journeyId !== filters.journeyId) return false;
+      if (filters.jobType && job.type !== filters.jobType) return false;
+      if (filters.searchText) {
+        const search = filters.searchText.toLowerCase();
+        const matchesName = job.candidateName?.toLowerCase().includes(search);
+        const matchesEmail = job.candidateEmail?.toLowerCase().includes(search);
+        const matchesError = job.error?.toLowerCase().includes(search);
+        const matchesQuestion = job.questionText?.toLowerCase().includes(search);
+        if (!matchesName && !matchesEmail && !matchesError && !matchesQuestion) return false;
+      }
+      return true;
+    });
+  };
+
+  const filteredFailedJobs = filterJobs(failedData?.jobs as FailedJob[] | undefined);
+  const filteredPendingJobs = filterJobs(pendingData?.jobs as FailedJob[] | undefined);
+
+  // Get unique values for filter dropdowns
+  const uniqueOrgs = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.organizationId).filter(Boolean)));
+  const uniqueQuestions = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.questionId).filter(Boolean)));
+  const uniqueAssessments = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.assessmentId).filter(Boolean)));
+  const uniqueJourneys = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.journeyId).filter(Boolean)));
+
+  const clearFilters = () => {
+    setFilters({
+      organizationId: '',
+      questionId: '',
+      assessmentId: '',
+      journeyId: '',
+      jobType: '',
+      searchText: '',
+    });
+  };
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+
+  return (
+    <div className="p-6 max-w-full">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Background Jobs Management</h1>
+        <p className="text-gray-600">Monitor and retry failed background processing jobs with detailed filtering</p>
+      </div>
+
+      {/* Filters Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <FunnelIcon className="h-5 w-5 text-gray-500" />
+            <h3 className="font-medium text-gray-900">Filters</h3>
+            {hasActiveFilters && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                Active
+              </span>
+            )}
+          </div>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1"
+            >
+              <XMarkIcon className="h-4 w-4" />
+              <span>Clear all</span>
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search (candidate name, email, error, question)
+            </label>
+            <input
+              type="text"
+              value={filters.searchText}
+              onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
+              placeholder="Search jobs..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Job Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Job Type</label>
+            <select
+              value={filters.jobType}
+              onChange={(e) => setFilters(prev => ({ ...prev, jobType: e.target.value as any }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">All Types</option>
+              <option value="transcription">Transcription</option>
+              <option value="scoring">Scoring</option>
+              <option value="video_generation">Video Generation</option>
+            </select>
+          </div>
+
+          {/* Organization */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Organization ({uniqueOrgs.length})
+            </label>
+            <select
+              value={filters.organizationId}
+              onChange={(e) => setFilters(prev => ({ ...prev, organizationId: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">All Organizations</option>
+              {uniqueOrgs.map(orgId => {
+                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.organizationId === orgId);
+                return (
+                  <option key={orgId} value={orgId}>
+                    {job?.organizationName || orgId}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Question */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Question ({uniqueQuestions.length})
+            </label>
+            <select
+              value={filters.questionId}
+              onChange={(e) => setFilters(prev => ({ ...prev, questionId: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">All Questions</option>
+              {uniqueQuestions.map(qId => {
+                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.questionId === qId);
+                return (
+                  <option key={qId} value={qId}>
+                    {job?.questionText?.substring(0, 50) || qId}...
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Assessment */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Assessment ({uniqueAssessments.length})
+            </label>
+            <select
+              value={filters.assessmentId}
+              onChange={(e) => setFilters(prev => ({ ...prev, assessmentId: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">All Assessments</option>
+              {uniqueAssessments.map(aId => {
+                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.assessmentId === aId);
+                return (
+                  <option key={aId} value={aId}>
+                    {job?.assessmentName || aId}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Journey */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Journey ({uniqueJourneys.length})
+            </label>
+            <select
+              value={filters.journeyId}
+              onChange={(e) => setFilters(prev => ({ ...prev, journeyId: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">All Journeys</option>
+              {uniqueJourneys.map(jId => {
+                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.journeyId === jId);
+                return (
+                  <option key={jId} value={jId}>
+                    {job?.journeyName || jId}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="mt-3 text-sm text-gray-600">
+            Showing {activeTab === 'failed' ? filteredFailedJobs.length : filteredPendingJobs.length} of {activeTab === 'failed' ? (failedData?.jobs?.length || 0) : (pendingData?.jobs?.length || 0)} jobs
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('failed')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'failed'
+                ? 'border-red-500 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            ❌ Failed Jobs {failedData?.jobs ? `(${filteredFailedJobs.length})` : ''}
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'pending'
+                ? 'border-yellow-500 text-yellow-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            ⏳ Pending Jobs {pendingData?.jobs ? `(${filteredPendingJobs.length})` : ''}
+          </button>
+          <button
+            onClick={() => setActiveTab('completed')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'completed'
+                ? 'border-green-500 text-green-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            ✅ Recent Completed
+          </button>
+        </nav>
+      </div>
+
+      {/* Failed Jobs */}
+      {activeTab === 'failed' && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium">Failed Jobs - Detailed View</h2>
+            <p className="text-sm text-gray-500">Click on a job to see full details and troubleshoot</p>
+          </div>
+
+          <div className="divide-y divide-gray-200">
+            {loadingFailed ? (
+              <div className="px-6 py-8 text-center text-gray-500">
+                <p>Loading failed jobs...</p>
+              </div>
+            ) : filteredFailedJobs.length > 0 ? (
+              filteredFailedJobs.map(job => (
+                <DetailedJobRow
+                  key={job.id}
+                  job={job}
+                  isExpanded={expandedJob === job.id}
+                  onToggleExpand={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
+                  onRetry={() => retryTranscription(job.responseId || job.id)}
+                  isRetrying={retrying.has(job.responseId || job.id)}
+                />
+              ))
+            ) : (
+              <div className="px-6 py-8 text-center text-gray-500">
+                {hasActiveFilters ? (
+                  <>
+                    <p className="text-lg">🔍 No jobs match your filters</p>
+                    <button
+                      onClick={clearFilters}
+                      className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Clear filters
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg">✅ No failed jobs found</p>
+                    <p className="text-sm mt-2">🎉 All background processing is healthy!</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Jobs */}
+      {activeTab === 'pending' && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium">Pending Jobs</h2>
+            <p className="text-sm text-gray-500">Jobs waiting to be processed by background workers</p>
+          </div>
+          <div className="px-6 py-8">
+            {loadingPending ? (
+              <p className="text-center text-gray-500">Loading pending jobs...</p>
+            ) : filteredPendingJobs.length > 0 ? (
+              <div className="space-y-4">
+                {filteredPendingJobs.map(job => (
+                  <div key={job.id} className="border-l-4 border-yellow-400 bg-yellow-50 p-4">
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="font-medium">{job.candidateName}</p>
+                        <p className="text-sm text-gray-600">{job.questionText?.substring(0, 80)}...</p>
+                        <div className="mt-2 space-y-1 text-xs text-gray-600">
+                          {job.organizationName && <p>🏢 {job.organizationName}</p>}
+                          {job.positionTitle && <p>💼 {job.positionTitle}</p>}
+                          {job.journeyName && <p>🗺️ {job.journeyName}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">✅ No pending jobs - all caught up!</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Completed Jobs */}
+      {activeTab === 'completed' && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium">Recently Completed</h2>
+            <p className="text-sm text-gray-500">Last 50 successfully processed jobs</p>
+          </div>
+          <div className="px-6 py-8">
+            {loadingCompleted ? (
+              <p className="text-center text-gray-500">Loading completed jobs...</p>
+            ) : completedData?.jobs && completedData.jobs.length > 0 ? (
+              <div className="space-y-4">
+                {completedData.jobs.map((job: any) => (
+                  <div key={job.id} className="border-l-4 border-green-400 bg-green-50 p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{job.candidateName}</p>
+                        <p className="text-sm text-gray-600">{job.questionText?.substring(0, 80)}...</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Completed: {new Date(job.completedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <span className="text-green-600 text-xl">✅</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">No recently completed jobs</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DetailedJobRow({
+  job,
+  isExpanded,
+  onToggleExpand,
+  onRetry,
+  isRetrying
+}: {
+  job: FailedJob;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onRetry: () => void;
+  isRetrying: boolean;
+}) {
+  return (
+    <div className="px-6 py-4 hover:bg-gray-50">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          {/* Header */}
+          <div className="flex items-center space-x-3 mb-2">
+            <span className="text-2xl">
+              {job.type === 'transcription' ? '🎥' : job.type === 'scoring' ? '📊' : '🎬'}
+            </span>
+            <div className="flex-1">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-medium text-gray-900">
+                  {job.type === 'interview_transcription' ? 'Interview Transcription' :
+                   job.type === 'assessment_scoring' ? 'Assessment Scoring' : job.type}
+                </h3>
+                <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
+                  Failed {job.retryCount || 0}x
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 font-medium">{job.candidateName}</p>
+              {job.candidateEmail && (
+                <p className="text-xs text-gray-500">{job.candidateEmail}</p>
+              )}
+            </div>
+
+            <button
+              onClick={onToggleExpand}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              {isExpanded ? (
+                <ChevronUpIcon className="h-5 w-5" />
+              ) : (
+                <ChevronDownIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+
+          {/* Quick Info */}
+          <div className="ml-11 space-y-1">
+            <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+              {job.organizationName && (
+                <span className="flex items-center space-x-1">
+                  <span>🏢</span>
+                  <span>{job.organizationName}</span>
+                </span>
+              )}
+              {job.positionTitle && (
+                <span className="flex items-center space-x-1">
+                  <span>💼</span>
+                  <span>{job.positionTitle}</span>
+                </span>
+              )}
+              {job.journeyName && (
+                <span className="flex items-center space-x-1">
+                  <span>🗺️</span>
+                  <span>{job.journeyName}</span>
+                </span>
+              )}
+              <span className="flex items-center space-x-1">
+                <span>⏰</span>
+                <span>{new Date(job.failedAt).toLocaleString()}</span>
+              </span>
+            </div>
+
+            {/* Error Preview */}
+            <div className="text-sm text-red-600 bg-red-50 p-2 rounded truncate">
+              <strong>Error:</strong> {job.error?.substring(0, 100)}...
+            </div>
+          </div>
+
+          {/* Expanded Details */}
+          {isExpanded && (
+            <div className="ml-11 mt-4 border-t pt-4 space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                {/* IDs Column */}
+                <div className="space-y-2 text-xs">
+                  <h4 className="font-medium text-gray-900 mb-2">Identifiers</h4>
+                  <div><strong>Job ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.id}</code></div>
+                  <div><strong>Response ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.responseId}</code></div>
+                  <div><strong>Candidate ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.candidateId}</code></div>
+                  {job.organizationId && <div><strong>Org ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.organizationId}</code></div>}
+                  {job.questionId && <div><strong>Question ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.questionId}</code></div>}
+                  {job.assessmentId && <div><strong>Assessment ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.assessmentId}</code></div>}
+                  {job.journeyId && <div><strong>Journey ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.journeyId}</code></div>}
+                  {job.positionId && <div><strong>Position ID:</strong> <code className="bg-gray-100 px-1 py-0.5 rounded">{job.positionId}</code></div>}
+                </div>
+
+                {/* Details Column */}
+                <div className="space-y-2 text-xs">
+                  <h4 className="font-medium text-gray-900 mb-2">Details</h4>
+                  {job.questionText && (
+                    <div className="bg-blue-50 p-2 rounded">
+                      <strong>Question:</strong> {job.questionText}
+                    </div>
+                  )}
+                  {job.metadata && (
+                    <div className="bg-gray-50 p-2 rounded">
+                      <strong>Metadata:</strong>
+                      <pre className="mt-1 text-xs overflow-x-auto">
+                        {JSON.stringify(job.metadata, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Full Error */}
+              <div className="bg-red-50 p-3 rounded">
+                <h4 className="font-medium text-red-900 mb-2">Full Error Message</h4>
+                <pre className="text-xs text-red-800 whitespace-pre-wrap font-mono">
+                  {job.error}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="ml-auto flex items-center space-x-2">
+          <button
+            onClick={onToggleExpand}
+            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+          >
+            {isExpanded ? 'Hide Details' : 'Show Details'}
+          </button>
+          <button
+            onClick={onRetry}
+            disabled={isRetrying}
+            className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 ${
+              isRetrying
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            <ArrowPathIcon className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            <span>{isRetrying ? 'Retrying...' : 'Retry Now'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
