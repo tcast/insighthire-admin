@@ -20,7 +20,7 @@ export default function PlatformAdminDashboard() {
 
   // Check auth but don't redirect
   if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
-    router.push('/platform-admin/login');
+    router.push('/login');
     return null;
   }
 
@@ -46,7 +46,7 @@ export default function PlatformAdminDashboard() {
               onClick={() => {
                 localStorage.removeItem('admin_token');
                 localStorage.removeItem('admin_user');
-                router.push('/platform-admin/login');
+                router.push('/login');
               }}
               className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 font-medium"
             >
@@ -60,7 +60,7 @@ export default function PlatformAdminDashboard() {
         {/* Quick Navigation */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <Link
-            href="/platform-admin/leads"
+            href="/leads"
             className="bg-white p-6 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all text-center group"
           >
             <Mail className="h-8 w-8 mx-auto mb-3 text-blue-600" />
@@ -69,7 +69,7 @@ export default function PlatformAdminDashboard() {
           </Link>
 
           <Link
-            href="/platform-admin/organizations"
+            href="/organizations"
             className="bg-white p-6 rounded-lg border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all text-center group"
           >
             <BuildingOfficeIcon className="h-8 w-8 mx-auto mb-3 text-purple-600" />
@@ -78,7 +78,7 @@ export default function PlatformAdminDashboard() {
           </Link>
 
           <Link
-            href="/platform-admin/background-jobs"
+            href="/background-jobs"
             className="bg-white p-6 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:shadow-lg transition-all text-center group"
           >
             <ClockIcon className="h-8 w-8 mx-auto mb-3 text-green-600" />
@@ -87,7 +87,7 @@ export default function PlatformAdminDashboard() {
           </Link>
 
           <Link
-            href="/platform-admin/api-monitoring"
+            href="/api-monitoring"
             className="bg-white p-6 rounded-lg border-2 border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all text-center group"
           >
             <ChartBarIcon className="h-8 w-8 mx-auto mb-3 text-orange-600" />
@@ -96,7 +96,7 @@ export default function PlatformAdminDashboard() {
           </Link>
 
           <Link
-            href="/platform-admin/audit"
+            href="/audit"
             className="bg-white p-6 rounded-lg border-2 border-gray-200 hover:border-red-500 hover:shadow-lg transition-all text-center group"
           >
             <ShieldCheckIcon className="h-8 w-8 mx-auto mb-3 text-red-600" />

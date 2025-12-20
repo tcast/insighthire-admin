@@ -11,7 +11,7 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   if (!localStorage.getItem('admin_token')) {
-    router.push('/platform-admin/login');
+    router.push('/login');
     return null;
   }
 

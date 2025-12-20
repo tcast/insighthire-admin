@@ -57,7 +57,7 @@ export default function BackgroundJobsPage() {
   });
 
   if (!localStorage.getItem('admin_token')) {
-    router.push('/platform-admin/login');
+    router.push('/login');
     return null;
   }
 

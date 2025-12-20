@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import { PlatformAdminNav } from '../../components/platform-admin/admin-nav';
+import { PlatformAdminNav } from '../../components/admin-nav';
 
 export default function PlatformAdminLayout({
   children,

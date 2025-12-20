@@ -60,7 +60,7 @@ export default function PlatformAdminLoginPage() {
       console.log('✅ Platform admin logged in:', data.user.email);
 
       // Redirect to admin dashboard
-      router.push('/platform-admin/organizations');
+      router.push('/organizations');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Login failed');

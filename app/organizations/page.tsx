@@ -30,7 +30,7 @@ export default function PlatformAdminOrganizationsPage() {
   });
 
   if (!localStorage.getItem('admin_token')) {
-    window.location.href = '/platform-admin/login';
+    window.location.href = '/login';
     return null;
   }
 
@@ -54,7 +54,7 @@ export default function PlatformAdminOrganizationsPage() {
               <button
                 onClick={() => {
                   localStorage.clear();
-                  window.location.href = '/platform-admin/login';
+                  window.location.href = '/login';
                 }}
                 className="text-sm text-red-600 hover:text-red-700"
               >
@@ -179,7 +179,7 @@ export default function PlatformAdminOrganizationsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <Link
-                        href={`/platform-admin/organizations/${org.id}`}
+                        href={`/organizations/${org.id}`}
                         className="text-blue-600 hover:text-blue-700 font-medium"
                       >
                         View Details

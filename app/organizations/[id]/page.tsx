@@ -42,7 +42,7 @@ export default function OrganizationDetailPage() {
   };
 
   if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
-    router.push('/platform-admin/login');
+    router.push('/login');
     return null;
   }
 
@@ -68,7 +68,7 @@ export default function OrganizationDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link
-                href="/platform-admin/organizations"
+                href="/organizations"
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
                 <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
@@ -337,31 +337,31 @@ export default function OrganizationDetailPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
                 <Link
-                  href={`/platform-admin/organizations/${orgId}/users`}
+                  href={`/organizations/${orgId}/users`}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                 >
                   Manage Users ({organization._count.users})
                 </Link>
                 <Link
-                  href={`/platform-admin/organizations/${orgId}/assessments`}
+                  href={`/organizations/${orgId}/assessments`}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                 >
                   View Assessments ({organization._count.assessments})
                 </Link>
                 <Link
-                  href={`/platform-admin/organizations/${orgId}/interviews`}
+                  href={`/organizations/${orgId}/interviews`}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                 >
                   View Interviews ({organization._count.interview_sessions})
                 </Link>
                 <Link
-                  href={`/platform-admin/organizations/${orgId}/personas`}
+                  href={`/organizations/${orgId}/personas`}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                 >
                   View AI Avatars
                 </Link>
                 <Link
-                  href={`/platform-admin/audit?org=${orgId}`}
+                  href={`/audit?org=${orgId}`}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                 >
                   View Audit Logs

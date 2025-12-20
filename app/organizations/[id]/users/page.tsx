@@ -20,7 +20,7 @@ export default function OrganizationUsersPage() {
   const [impersonating, setImpersonating] = useState<string | null>(null);
 
   if (!localStorage.getItem('admin_token')) {
-    router.push('/platform-admin/login');
+    router.push('/login');
     return null;
   }
 
@@ -66,7 +66,7 @@ export default function OrganizationUsersPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center space-x-4">
             <Link
-              href={`/platform-admin/organizations/${orgId}`}
+              href={`/organizations/${orgId}`}
               className="p-2 hover:bg-gray-100 rounded-lg"
             >
               <ArrowLeftIcon className="h-5 w-5 text-gray-600" />

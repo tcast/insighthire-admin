@@ -17,7 +17,7 @@ export default function OrganizationInterviewsPage() {
   const { data: orgData } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId });
 
   if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
-    router.push('/platform-admin/login');
+    router.push('/login');
     return null;
   }
 
@@ -30,7 +30,7 @@ export default function OrganizationInterviewsPage() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center space-x-4">
-            <Link href={`/platform-admin/organizations/${orgId}`} className="p-2 hover:bg-gray-100 rounded-lg">
+            <Link href={`/organizations/${orgId}`} className="p-2 hover:bg-gray-100 rounded-lg">
               <ArrowLeftIcon className="h-5 w-5" />
             </Link>
             <div>
