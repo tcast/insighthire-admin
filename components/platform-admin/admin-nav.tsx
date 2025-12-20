@@ -5,9 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Mail, Building2, Activity, BarChart3, Shield, LogOut } from 'lucide-react';
 
 const navItems = [
-  { name: 'Dashboard', href: '/', icon: Activity },
-  { name: 'Leads', href: '/leads', icon: Mail },
   { name: 'Organizations', href: '/organizations', icon: Building2 },
+  { name: 'Background Jobs', href: '/jobs', icon: Activity },
+  { name: 'Leads', href: '/leads', icon: Mail },
   { name: 'API Monitoring', href: '/api-monitoring', icon: BarChart3 },
   { name: 'Audit', href: '/audit', icon: Shield },
 ];
