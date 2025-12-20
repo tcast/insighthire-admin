@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import {
   FunnelIcon,
   ArrowPathIcon,
@@ -36,6 +37,7 @@ interface FailedJob {
 }
 
 export default function BackgroundJobsAdmin() {
+  const { isLoading: authLoading } = useAdminAuth();
   const [activeTab, setActiveTab] = useState<'failed' | 'pending' | 'completed'>('failed');
   const [retrying, setRetrying] = useState<Set<string>>(new Set());
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
@@ -52,25 +54,26 @@ export default function BackgroundJobsAdmin() {
 
   // Get queue stats
   const { data: queueStats } = trpc.platformAdmin.getJobQueues.useQuery(undefined, {
+    enabled: !authLoading,
     retry: false,
     refetchInterval: 30000,
   });
 
   // Get failed jobs
   const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
-    enabled: activeTab === 'failed',
+    enabled: !authLoading && activeTab === 'failed',
     retry: false,
   });
 
   // Get pending jobs
   const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
-    enabled: activeTab === 'pending',
+    enabled: !authLoading && activeTab === 'pending',
     retry: false,
   });
 
   // Get completed jobs
   const { data: completedData, refetch: refetchCompleted, isLoading: loadingCompleted } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
-    enabled: activeTab === 'completed',
+    enabled: !authLoading && activeTab === 'completed',
     retry: false,
   });
 
@@ -142,6 +145,14 @@ export default function BackgroundJobsAdmin() {
   };
 
   const hasActiveFilters = Object.values(filters).some(v => v !== '');
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-full">
