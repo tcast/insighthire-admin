@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { trpc } from '../../../../../lib/trpc';
+import { trpc } from '@/lib/trpc';
 import { ArrowLeftIcon, DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function OrganizationAssessmentsPage() {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { trpc } from '../../../lib/trpc';
+import { trpc } from '@/lib/trpc';
 import {
   CpuChipIcon,
   ClockIcon,

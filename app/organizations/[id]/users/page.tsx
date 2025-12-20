@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
-import { trpc } from '../../../../../lib/trpc';
+import { trpc } from '@/lib/trpc';
 import { ArrowLeftIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 
 export default function OrganizationUsersPage() {

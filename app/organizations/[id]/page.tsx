@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { trpc } from '../../../../lib/trpc';
+import { trpc } from '@/lib/trpc';
 import {
   ArrowLeftIcon,
   BuildingOfficeIcon,
