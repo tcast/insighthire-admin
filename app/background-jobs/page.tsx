@@ -52,6 +52,14 @@ export default function BackgroundJobsAdmin() {
     searchText: '',
   });
 
+  // Get all organizations for dropdown
+  const { data: orgsData } = trpc.platformAdmin.listOrganizations.useQuery({
+    page: 1,
+  }, {
+    enabled: !authLoading,
+    retry: false,
+  });
+
   // Get queue stats
   const { data: queueStats } = trpc.platformAdmin.getJobQueues.useQuery(undefined, {
     enabled: !authLoading,
@@ -135,10 +143,10 @@ export default function BackgroundJobsAdmin() {
   // Get unique values for filter dropdowns with cascading logic
   const allJobs = (failedData?.jobs as FailedJob[] || []);
 
-  // Always show all organizations
-  const uniqueOrgs = Array.from(new Set(allJobs.map(j => j.organizationId).filter(Boolean)));
+  // Show ALL organizations from system, not just ones with failed jobs
+  const allOrganizations = orgsData?.organizations || [];
 
-  // Filter child dropdowns based on selected org
+  // For child dropdowns, only show items from jobs (cascading from org filter)
   const jobsForDropdowns = filters.organizationId
     ? allJobs.filter(j => j.organizationId === filters.organizationId)
     : allJobs;
@@ -262,7 +270,7 @@ export default function BackgroundJobsAdmin() {
           {/* Organization */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Organization ({uniqueOrgs.length})
+              Organization ({allOrganizations.length})
             </label>
             <select
               value={filters.organizationId}
@@ -270,14 +278,11 @@ export default function BackgroundJobsAdmin() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
               <option value="" className="text-gray-900">All Organizations</option>
-              {uniqueOrgs.map(orgId => {
-                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.organizationId === orgId);
-                return (
-                  <option key={orgId} value={orgId}>
-                    {job?.organizationName || orgId}
-                  </option>
-                );
-              })}
+              {allOrganizations.map((org: any) => (
+                <option key={org.id} value={org.id}>
+                  {org.name || org.domain || org.id}
+                </option>
+              ))}
             </select>
           </div>
 
