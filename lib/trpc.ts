@@ -22,26 +22,13 @@ export const trpcClient = trpc.createClient({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
 
-        console.log('🔷 Admin tRPC Request:', {
-          url,
-          method: options?.method || 'GET',
-          hasToken: !!token,
-        });
-
         return fetch(url, {
           ...options,
           credentials: 'include',
           headers,
         }).then(res => {
-          console.log('🔶 Admin tRPC Response:', {
-            url,
-            status: res.status,
-            ok: res.ok
-          });
-
           // Handle auth failures - redirect to admin login
           if (res.status === 401 || res.status === 403) {
-            console.log('🔐 Admin auth failed - redirecting to login');
             if (typeof window !== 'undefined') {
               localStorage.removeItem('admin_token');
               localStorage.removeItem('admin_user');
@@ -50,13 +37,6 @@ export const trpcClient = trpc.createClient({
           }
 
           return res;
-        }).catch(err => {
-          console.error('🔴 Admin tRPC Error:', {
-            url,
-            error: err,
-            message: err.message
-          });
-          throw err;
         });
       },
     }),
