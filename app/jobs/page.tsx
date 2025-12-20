@@ -25,24 +25,29 @@ export default function BackgroundJobsPage() {
   // Real-time polling (every 10 seconds)
   const { data: queues, refetch: refetchQueues } = trpc.platformAdmin.getJobQueues.useQuery(undefined, {
     refetchInterval: autoRefresh ? 10000 : false,
+    retry: false,
   });
 
   const { data: failedJobs, refetch: refetchFailed } = trpc.platformAdmin.getFailedJobs.useQuery({
     queue: queueFilter,
   }, {
     refetchInterval: autoRefresh ? 30000 : false,
+    retry: false,
   });
 
   const { data: stats } = trpc.platformAdmin.getJobStatistics.useQuery(undefined, {
     refetchInterval: autoRefresh ? 30000 : false,
+    retry: false,
   });
 
   const { data: performance } = trpc.platformAdmin.getJobPerformance.useQuery(undefined, {
     refetchInterval: autoRefresh ? 60000 : false,
+    retry: false,
   });
 
   const { data: alerts } = trpc.platformAdmin.getJobAlerts.useQuery(undefined, {
     refetchInterval: autoRefresh ? 30000 : false,
+    retry: false,
   });
 
   const retryJob = trpc.platformAdmin.retryJob.useMutation({
