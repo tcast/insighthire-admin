@@ -40,9 +40,10 @@ COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/package.json ./
 
 # Copy built app
-COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy public folder if it exists
+COPY --from=builder /app/public ./public || true
 
 USER nextjs
 
