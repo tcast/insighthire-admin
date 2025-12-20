@@ -1,25 +1,32 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
+export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import { ShieldCheckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export default function AuditLogsPage() {
   const router = useRouter();
+  const { isLoading: authLoading } = useAdminAuth();
   const [page, setPage] = useState(1);
   const [actionFilter, setActionFilter] = useState('');
 
   const { data, isLoading } = trpc.platformAdmin.getAuditLogs.useQuery({
     page,
     action: actionFilter || undefined,
+  }, {
+    enabled: !authLoading, // Only query after auth check
   });
 
-  if (!localStorage.getItem('admin_token')) {
-    router.push('/login');
-    return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   return (
@@ -28,10 +35,10 @@ export default function AuditLogsPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center space-x-3">
-            <ShieldCheckIcon className="h-8 w-8 text-blue-600" />
+            <ShieldCheckIcon className="h-8 w-8 text-gray-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
-              <p className="text-sm text-gray-600">All platform admin actions</p>
+              <p className="text-sm text-gray-600">Track all platform admin actions</p>
             </div>
           </div>
         </div>
@@ -39,97 +46,68 @@ export default function AuditLogsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex items-center space-x-4">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
             <input
               type="text"
+              placeholder="Filter by action..."
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              placeholder="Filter by action..."
-              className="px-4 py-2 border border-gray-300 rounded-lg"
+              className="flex-1 px-3 py-2 border rounded-lg"
             />
           </div>
         </div>
 
-        {/* Logs Table */}
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Timestamp
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Admin
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Action
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Target
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    IP Address
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {data?.logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {new Date(log.createdAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {log.adminUserId}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {log.targetOrgId && <div>Org: {log.targetOrgId.substring(0, 12)}...</div>}
-                      {log.targetUserId && <div>User: {log.targetUserId.substring(0, 12)}...</div>}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {log.ipAddress || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            {data && data.total > 50 && (
-              <div className="bg-gray-50 px-6 py-3 border-t">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-700">
-                    Showing {data.logs.length} of {data.total} logs
-                  </p>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setPage(p => p + 1)}
-                      disabled={data.logs.length < 50}
-                      className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-                    >
-                      Next
-                    </button>
+        {/* Logs */}
+        <div className="bg-white rounded-lg shadow">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <p className="text-gray-600">Loading audit logs...</p>
+            </div>
+          ) : data?.logs && data.logs.length > 0 ? (
+            <div className="divide-y">
+              {data.logs.map((log: any) => (
+                <div key={log.id} className="p-4">
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="font-medium">{log.action}</p>
+                      <p className="text-sm text-gray-600">{log.details}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        By: {log.adminEmail} • {new Date(log.timestamp).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center text-gray-500">
+              <p>No audit logs found</p>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {data?.total && data.total > 20 && (
+          <div className="mt-6 flex justify-center space-x-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border rounded-lg disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2">
+              Page {page} of {Math.ceil(data.total / 20)}
+            </span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= Math.ceil(data.total / 20)}
+              className="px-4 py-2 border rounded-lg disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
