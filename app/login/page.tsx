@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { trpc } from '@/lib/trpc';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 /**
@@ -17,56 +18,43 @@ export default function PlatformAdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
-      // Direct POST to tRPC mutation
-      const response = await fetch(`${apiUrl}/trpc/auth.login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          rememberMe: false,
-        }),
-      });
-
-      const result = await response.json();
-
-      // Handle tRPC error format
-      if (result.error) {
-        throw new Error(result.error.message || 'Invalid credentials');
-      }
-
-      const data = result.result?.data || result;
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: (data) => {
+      console.log('Login response:', data);
 
       // Verify this is a platform admin
       if (!data.user?.isPlatformAdmin || data.user.organizationId !== 'platform_00000000000000000') {
-        throw new Error('Not a platform administrator');
+        setError('Not a platform administrator');
+        return;
       }
 
       // Store admin token
-      typeof window !== "undefined" && localStorage.setItem('admin_token', data.accessToken);
-      typeof window !== "undefined" && localStorage.setItem('admin_user', JSON.stringify(data.user));
-      document.cookie = `admin_token=${data.accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_token', data.accessToken);
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+      }
 
       console.log('✅ Platform admin logged in:', data.user.email);
 
       // Redirect to admin dashboard
       router.push('/organizations');
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       console.error('Login error:', err);
       setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    loginMutation.mutate({
+      email,
+      password,
+      rememberMe: false,
+    });
   };
 
   return (
@@ -125,10 +113,10 @@ export default function PlatformAdminLoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loginMutation.isLoading}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loginMutation.isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
