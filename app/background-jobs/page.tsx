@@ -127,11 +127,20 @@ export default function BackgroundJobsAdmin() {
   const filteredFailedJobs = filterJobs(failedData?.jobs as FailedJob[] | undefined);
   const filteredPendingJobs = filterJobs(pendingData?.jobs as FailedJob[] | undefined);
 
-  // Get unique values for filter dropdowns
-  const uniqueOrgs = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.organizationId).filter(Boolean)));
-  const uniqueQuestions = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.questionId).filter(Boolean)));
-  const uniqueAssessments = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.assessmentId).filter(Boolean)));
-  const uniqueJourneys = Array.from(new Set((failedData?.jobs as FailedJob[] || []).map(j => j.journeyId).filter(Boolean)));
+  // Get unique values for filter dropdowns with cascading logic
+  const allJobs = (failedData?.jobs as FailedJob[] || []);
+
+  // Always show all organizations
+  const uniqueOrgs = Array.from(new Set(allJobs.map(j => j.organizationId).filter(Boolean)));
+
+  // Filter child dropdowns based on selected org
+  const jobsForDropdowns = filters.organizationId
+    ? allJobs.filter(j => j.organizationId === filters.organizationId)
+    : allJobs;
+
+  const uniqueQuestions = Array.from(new Set(jobsForDropdowns.map(j => j.questionId).filter(Boolean)));
+  const uniqueAssessments = Array.from(new Set(jobsForDropdowns.map(j => j.assessmentId).filter(Boolean)));
+  const uniqueJourneys = Array.from(new Set(jobsForDropdowns.map(j => j.journeyId).filter(Boolean)));
 
   const clearFilters = () => {
     setFilters({
