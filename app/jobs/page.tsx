@@ -219,9 +219,9 @@ export default function BackgroundJobsPage() {
               <select
                 value={queueFilter}
                 onChange={(e) => setQueueFilter(e.target.value as any)}
-                className="px-3 py-2 border rounded-lg text-sm"
+                className="px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white"
               >
-                <option value="all">All Queues</option>
+                <option value="all" className="text-gray-900">All Queues</option>
                 <option value="transcription">Transcription Only</option>
                 <option value="scoring">Scoring Only</option>
               </select>
