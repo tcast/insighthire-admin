@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import {
   CpuChipIcon,
   ClockIcon,
@@ -16,6 +17,7 @@ import {
 
 export default function BackgroundJobsPage() {
   const router = useRouter();
+  const { isLoading: authLoading } = useAdminAuth();
   const [queueFilter, setQueueFilter] = useState<'all' | 'transcription' | 'scoring'>('all');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
@@ -58,9 +60,12 @@ export default function BackgroundJobsPage() {
     },
   });
 
-  if (!localStorage.getItem('admin_token')) {
-    router.push('/login');
-    return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   const handleRetry = async (jobId: string, jobType: 'transcription' | 'scoring') => {

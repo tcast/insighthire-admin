@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import {
   MagnifyingGlassIcon,
   BuildingOfficeIcon,
@@ -13,12 +14,10 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function PlatformAdminOrganizationsPage() {
+  const { isLoading: authLoading } = useAdminAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [planFilter, setPlanFilter] = useState<string>('');
-
-  // Use admin_token instead of auth_token for API calls
-  const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
 
   const { data, isLoading, error } = trpc.platformAdmin.listOrganizations.useQuery({
     page: 1,
@@ -26,14 +25,18 @@ export default function PlatformAdminOrganizationsPage() {
     status: statusFilter as any || undefined,
     plan: planFilter as any || undefined,
   }, {
+    enabled: !authLoading,
     context: {
       skipBatch: true,
     },
   });
 
-  if (!localStorage.getItem('admin_token')) {
-    window.location.href = '/login';
-    return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   return (
