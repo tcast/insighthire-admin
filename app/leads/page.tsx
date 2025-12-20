@@ -1,8 +1,6 @@
 'use client';
+
 export const dynamic = 'force-dynamic';
-
-
-'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,131 +10,164 @@ import { Mail, Phone, Building2, Calendar, MessageSquare, ArrowLeft } from 'luci
 
 export default function LeadsPage() {
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'qualified'>('all');
 
-  if (!localStorage.getItem('admin_token')) {
+  // Check auth
+  if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
     router.push('/login');
     return null;
   }
 
-  const { data: leadsData, isLoading, refetch } = trpc.contact.list.useQuery({
-    status: statusFilter === 'all' ? undefined : statusFilter,
+  const { data: leads, isLoading, refetch } = trpc.platformAdmin.getLeads.useQuery({
+    status: filter === 'all' ? undefined : filter,
   });
 
-  const updateStatus = trpc.contact.updateStatus.useMutation({
-    onSuccess: () => refetch(),
+  const updateLeadStatus = trpc.platformAdmin.updateLeadStatus.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
   });
 
-  const leads = leadsData?.leads || [];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return 'bg-blue-100 text-blue-800';
-      case 'contacted': return 'bg-yellow-100 text-yellow-800';
-      case 'qualified': return 'bg-green-100 text-green-800';
-      case 'closed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    try {
+      await updateLeadStatus.mutateAsync({
+        leadId,
+        status: newStatus as any,
+      });
+    } catch (error: any) {
+      alert('Failed to update status: ' + error.message);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Contact Leads</h1>
-        <p className="text-gray-600 mt-1">Manage incoming sales inquiries</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Contact Leads</h1>
+            <p className="text-gray-600 mt-1">Manage sales inquiries and demo requests</p>
+          </div>
+          <Link
+            href="/"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Dashboard</span>
+          </Link>
+        </div>
 
-      {/* Filter Tabs */}
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="flex gap-8">
-            {['all', 'new', 'contacted', 'qualified', 'closed'].map((status) => (
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex space-x-2">
+            {['all', 'new', 'contacted', 'qualified'].map((status) => (
               <button
                 key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`
-                  pb-4 px-1 border-b-2 font-medium text-sm transition-colors capitalize
-                  ${statusFilter === status
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
-                `}
+                onClick={() => setFilter(status as any)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  filter === status
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
-                {status} {status === 'all' && `(${leads.length})`}
+                {status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
             ))}
-          </nav>
+          </div>
         </div>
 
         {/* Leads List */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading leads...</p>
-          </div>
-        ) : leads.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-600">No leads found</p>
-          </div>
-      ) : (
-        <div className="space-y-4">
-          {leads.map((lead: any) => (
-              <div key={lead.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-gray-900">{lead.name}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
-                        {lead.status}
-                      </span>
+        <div className="bg-white rounded-lg shadow">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading leads...</p>
+            </div>
+          ) : leads && leads.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {leads.map((lead: any) => (
+                <div key={lead.id} className="p-6 hover:bg-gray-50">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Building2 className="h-5 w-5 text-gray-400" />
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {lead.companyName || 'Unknown Company'}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            lead.status === 'new'
+                              ? 'bg-green-100 text-green-800'
+                              : lead.status === 'contacted'
+                              ? 'bg-blue-100 text-blue-800'
+                              : lead.status === 'qualified'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {lead.status}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 text-sm text-gray-600">
+                        {lead.contactName && (
+                          <p className="flex items-center space-x-2">
+                            <span className="font-medium">{lead.contactName}</span>
+                          </p>
+                        )}
+                        {lead.email && (
+                          <p className="flex items-center space-x-2">
+                            <Mail className="h-4 w-4" />
+                            <a href={`mailto:${lead.email}`} className="hover:text-blue-600">
+                              {lead.email}
+                            </a>
+                          </p>
+                        )}
+                        {lead.phone && (
+                          <p className="flex items-center space-x-2">
+                            <Phone className="h-4 w-4" />
+                            <span>{lead.phone}</span>
+                          </p>
+                        )}
+                        {lead.message && (
+                          <p className="flex items-center space-x-2 mt-2">
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="italic">{lead.message}</span>
+                          </p>
+                        )}
+                        <p className="flex items-center space-x-2 text-xs text-gray-500">
+                          <Calendar className="h-4 w-4" />
+                          <span>{new Date(lead.createdAt).toLocaleString()}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Building2 className="h-4 w-4" />
-                        <span>{lead.company}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-4 w-4" />
-                        <a href={`mailto:${lead.email}`} className="text-blue-600 hover:text-blue-700">
-                          {lead.email}
-                        </a>
-                      </div>
-                      {lead.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-4 w-4" />
-                          <a href={`tel:${lead.phone}`} className="text-blue-600 hover:text-blue-700">
-                            {lead.phone}
-                          </a>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{new Date(lead.createdAt).toLocaleDateString()}</span>
-                      </div>
+
+                    <div>
+                      <select
+                        value={lead.status}
+                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        disabled={updateLeadStatus.isLoading}
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="customer">Customer</option>
+                        <option value="lost">Lost</option>
+                      </select>
                     </div>
                   </div>
-
-                  <select
-                    value={lead.status}
-                    onChange={(e) => updateStatus.mutate({ id: lead.id, status: e.target.value as any })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="qualified">Qualified</option>
-                    <option value="closed">Closed</option>
-                  </select>
                 </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-start gap-2 mb-2">
-                    <MessageSquare className="h-4 w-4 text-gray-600 mt-1" />
-                    <span className="text-sm font-medium text-gray-700">Message:</span>
-                  </div>
-                  <p className="text-gray-700 whitespace-pre-wrap ml-6">{lead.message}</p>
-                </div>
-              </div>
-          ))}
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center text-gray-500">
+              <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg">No leads found</p>
+              <p className="text-sm mt-2">New contact form submissions will appear here</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
