@@ -1,28 +1,26 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import { ArrowLeftIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 
 export default function OrganizationUsersPage() {
   const params = useParams();
-  const router = useRouter();
+  const { isLoading: authLoading } = useAdminAuth();
   const orgId = params.id as string;
 
-  const { data, isLoading, refetch } = trpc.platformAdmin.getOrganizationUsers.useQuery({ organizationId: orgId });
+  const { data, isLoading, refetch } = trpc.platformAdmin.getOrganizationUsers.useQuery({ organizationId: orgId }, {
+    enabled: !authLoading,
+  });
   const deactivateUser = trpc.platformAdmin.deactivateUser.useMutation({
     onSuccess: () => refetch(),
   });
   const impersonateUser = trpc.platformAdmin.impersonateUser.useMutation();
 
   const [impersonating, setImpersonating] = useState<string | null>(null);
-
-  if (!typeof window !== "undefined" && localStorage.getItem('admin_token')) {
-    router.push('/login');
-    return null;
-  }
 
   const handleImpersonate = async (userId: string) => {
     if (!confirm('Impersonate this user? All actions will be logged.')) return;
@@ -31,9 +29,14 @@ export default function OrganizationUsersPage() {
       const result = await impersonateUser.mutateAsync({ userId });
 
       // Store impersonation token
-      typeof window !== "undefined" && localStorage.setItem('impersonation_token', result.token);
-      typeof window !== "undefined" && localStorage.setItem('impersonation_user', JSON.stringify(result.user));
-      typeof window !== "undefined" && localStorage.setItem('impersonation_admin', typeof window !== "undefined" && localStorage.getItem('admin_user')!);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('impersonation_token', result.token);
+        localStorage.setItem('impersonation_user', JSON.stringify(result.user));
+        const adminUser = localStorage.getItem('admin_user');
+        if (adminUser) {
+          localStorage.setItem('impersonation_admin', adminUser);
+        }
+      }
 
       // Open customer dashboard in new tab
       window.open('/dashboard?impersonated=true', '_blank');
@@ -51,7 +54,7 @@ export default function OrganizationUsersPage() {
     await deactivateUser.mutateAsync({ userId, reason });
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

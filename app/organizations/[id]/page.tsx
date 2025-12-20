@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import {
   ArrowLeftIcon,
   BuildingOfficeIcon,
@@ -15,14 +16,16 @@ import {
 
 export default function OrganizationDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const { isLoading: authLoading } = useAdminAuth();
   const orgId = params.id as string;
 
   const [editingSubscription, setEditingSubscription] = useState(false);
   const [newPlan, setNewPlan] = useState('');
   const [newStatus, setNewStatus] = useState('');
 
-  const { data, isLoading, refetch } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId });
+  const { data, isLoading, refetch } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId }, {
+    enabled: !authLoading,
+  });
 
   const updateSubscription = trpc.platformAdmin.updateSubscription.useMutation({
     onSuccess: () => {
@@ -41,12 +44,7 @@ export default function OrganizationDetailPage() {
     });
   };
 
-  if (typeof window !== 'undefined' && !typeof window !== "undefined" && localStorage.getItem('admin_token')) {
-    router.push('/login');
-    return null;
-  }
-
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

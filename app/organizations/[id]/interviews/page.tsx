@@ -1,27 +1,27 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import { ArrowLeftIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 
 export default function OrganizationInterviewsPage() {
   const params = useParams();
-  const router = useRouter();
+  const { isLoading: authLoading } = useAdminAuth();
   const orgId = params.id as string;
 
   const { data, isLoading } = trpc.platformAdmin.getOrganizationInterviews.useQuery({
     organizationId: orgId,
+  }, {
+    enabled: !authLoading,
   });
 
-  const { data: orgData } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId });
+  const { data: orgData } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId }, {
+    enabled: !authLoading,
+  });
 
-  if (typeof window !== 'undefined' && !typeof window !== "undefined" && localStorage.getItem('admin_token')) {
-    router.push('/login');
-    return null;
-  }
-
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return <div className="flex justify-center py-12"><div className="animate-spin h-12 w-12 border-b-2 border-blue-600 rounded-full"></div></div>;
   }
 

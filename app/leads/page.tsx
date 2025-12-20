@@ -3,23 +3,19 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+import { useAdminAuth } from '@/lib/use-admin-auth';
 import Link from 'next/link';
 import { Mail, Phone, Building2, Calendar, MessageSquare, ArrowLeft } from 'lucide-react';
 
 export default function LeadsPage() {
-  const router = useRouter();
+  const { isLoading: authLoading } = useAdminAuth();
   const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'qualified'>('all');
-
-  // Check auth
-  if (typeof window !== 'undefined' && !typeof window !== "undefined" && localStorage.getItem('admin_token')) {
-    router.push('/login');
-    return null;
-  }
 
   const { data: leads, isLoading, refetch } = trpc.platformAdmin.getLeads.useQuery({
     status: filter === 'all' ? undefined : filter,
+  }, {
+    enabled: !authLoading,
   });
 
   const updateLeadStatus = trpc.platformAdmin.updateLeadStatus.useMutation({
@@ -38,6 +34,14 @@ export default function LeadsPage() {
       alert('Failed to update status: ' + error.message);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
