@@ -50,32 +50,41 @@ export default function BackgroundJobsAdmin() {
     searchText: '',
   });
 
+  // Get queue stats
+  const { data: queueStats } = trpc.platformAdmin.getJobQueues.useQuery(undefined, {
+    retry: false,
+    refetchInterval: 30000,
+  });
+
   // Get failed jobs
-  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed } = trpc.admin.getFailedJobs.useQuery(undefined, {
-    enabled: activeTab === 'failed'
+  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+    enabled: activeTab === 'failed',
+    retry: false,
   });
 
   // Get pending jobs
-  const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.admin.getPendingJobs.useQuery(undefined, {
-    enabled: activeTab === 'pending'
+  const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+    enabled: activeTab === 'pending',
+    retry: false,
   });
 
   // Get completed jobs
-  const { data: completedData, refetch: refetchCompleted, isLoading: loadingCompleted } = trpc.admin.getCompletedJobs.useQuery(undefined, {
-    enabled: activeTab === 'completed'
+  const { data: completedData, refetch: refetchCompleted, isLoading: loadingCompleted } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+    enabled: activeTab === 'completed',
+    retry: false,
   });
 
-  const retryMutation = trpc.admin.retryTranscription.useMutation();
+  const retryMutation = trpc.platformAdmin.retryJob.useMutation();
 
-  const retryTranscription = async (responseId: string) => {
-    setRetrying(prev => new Set(prev).add(responseId));
+  const retryTranscription = async (jobId: string, jobType: 'transcription' | 'scoring') => {
+    setRetrying(prev => new Set(prev).add(jobId));
     try {
-      await retryMutation.mutateAsync({ responseId });
+      await retryMutation.mutateAsync({ jobId, jobType });
       setTimeout(() => {
         refetchFailed();
         setRetrying(prev => {
           const newSet = new Set(prev);
-          newSet.delete(responseId);
+          newSet.delete(jobId);
           return newSet;
         });
       }, 2000);
@@ -84,7 +93,7 @@ export default function BackgroundJobsAdmin() {
       alert('Retry failed: ' + (error as Error).message);
       setRetrying(prev => {
         const newSet = new Set(prev);
-        newSet.delete(responseId);
+        newSet.delete(jobId);
         return newSet;
       });
     }
@@ -140,6 +149,37 @@ export default function BackgroundJobsAdmin() {
         <h1 className="text-2xl font-bold text-gray-900">Background Jobs Management</h1>
         <p className="text-gray-600">Monitor and retry failed background processing jobs with detailed filtering</p>
       </div>
+
+      {/* Queue Overview Cards */}
+      {queueStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {queueStats.queues.map((queue: any) => (
+            <div key={queue.name} className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 capitalize mb-4">
+                {queue.name.replace('-', ' ')}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-900">{queue.waiting}</div>
+                  <div className="text-xs text-yellow-700">Waiting</div>
+                </div>
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-900">{queue.active}</div>
+                  <div className="text-xs text-blue-700">Active</div>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-900">{queue.completed}</div>
+                  <div className="text-xs text-green-700">Last 24h</div>
+                </div>
+                <div className="text-center p-3 bg-red-50 rounded-lg">
+                  <div className="text-2xl font-bold text-red-900">{queue.failed}</div>
+                  <div className="text-xs text-red-700">Failed</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filters Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -346,7 +386,7 @@ export default function BackgroundJobsAdmin() {
                   job={job}
                   isExpanded={expandedJob === job.id}
                   onToggleExpand={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
-                  onRetry={() => retryTranscription(job.responseId || job.id)}
+                  onRetry={() => retryTranscription(job.responseId || job.id, job.type as any)}
                   isRetrying={retrying.has(job.responseId || job.id)}
                 />
               ))
