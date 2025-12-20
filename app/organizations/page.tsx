@@ -54,11 +54,11 @@ export default function PlatformAdminOrganizationsPage() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                👤 {localStorage.getItem('admin_user') && JSON.parse(localStorage.getItem('admin_user')!).email}
+                👤 {typeof window !== "undefined" && localStorage.getItem('admin_user') && JSON.parse(typeof window !== "undefined" && localStorage.getItem('admin_user')!).email}
               </span>
               <button
                 onClick={() => {
-                  localStorage.clear();
+                  typeof window !== "undefined" && localStorage.clear();
                   window.location.href = '/login';
                 }}
                 className="text-sm text-red-600 hover:text-red-700"
