@@ -53,8 +53,8 @@ export default function PlatformAdminLoginPage() {
       }
 
       // Store admin token
-      localStorage.setItem('admin_token', data.accessToken);
-      localStorage.setItem('admin_user', JSON.stringify(data.user));
+      typeof window !== "undefined" && localStorage.setItem('admin_token', data.accessToken);
+      typeof window !== "undefined" && localStorage.setItem('admin_user', JSON.stringify(data.user));
       document.cookie = `admin_token=${data.accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
 
       console.log('✅ Platform admin logged in:', data.user.email);

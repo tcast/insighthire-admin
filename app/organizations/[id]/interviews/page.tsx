@@ -16,7 +16,7 @@ export default function OrganizationInterviewsPage() {
 
   const { data: orgData } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId });
 
-  if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
+  if (typeof window !== 'undefined' && !typeof window !== "undefined" && localStorage.getItem('admin_token')) {
     router.push('/login');
     return null;
   }

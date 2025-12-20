@@ -19,7 +19,7 @@ export default function OrganizationUsersPage() {
 
   const [impersonating, setImpersonating] = useState<string | null>(null);
 
-  if (!localStorage.getItem('admin_token')) {
+  if (!typeof window !== "undefined" && localStorage.getItem('admin_token')) {
     router.push('/login');
     return null;
   }
@@ -31,9 +31,9 @@ export default function OrganizationUsersPage() {
       const result = await impersonateUser.mutateAsync({ userId });
 
       // Store impersonation token
-      localStorage.setItem('impersonation_token', result.token);
-      localStorage.setItem('impersonation_user', JSON.stringify(result.user));
-      localStorage.setItem('impersonation_admin', localStorage.getItem('admin_user')!);
+      typeof window !== "undefined" && localStorage.setItem('impersonation_token', result.token);
+      typeof window !== "undefined" && localStorage.setItem('impersonation_user', JSON.stringify(result.user));
+      typeof window !== "undefined" && localStorage.setItem('impersonation_admin', typeof window !== "undefined" && localStorage.getItem('admin_user')!);
 
       // Open customer dashboard in new tab
       window.open('/dashboard?impersonated=true', '_blank');

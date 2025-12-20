@@ -41,7 +41,7 @@ export default function OrganizationDetailPage() {
     });
   };
 
-  if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
+  if (typeof window !== 'undefined' && !typeof window !== "undefined" && localStorage.getItem('admin_token')) {
     router.push('/login');
     return null;
   }

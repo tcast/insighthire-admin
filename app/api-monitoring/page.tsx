@@ -100,7 +100,7 @@ export default function ApiMonitoringPage() {
   const loadMonitoringData = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.insighthire.com';
-      const token = localStorage.getItem('auth_token');
+      const token = typeof window !== "undefined" && localStorage.getItem('auth_token');
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ export default function ApiMonitoringPage() {
   const loadServiceDetails = async (serviceId: string) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.insighthire.com';
-      const token = localStorage.getItem('auth_token');
+      const token = typeof window !== "undefined" && localStorage.getItem('auth_token');
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -153,7 +153,7 @@ export default function ApiMonitoringPage() {
     setRefreshing(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.insighthire.com';
-      const token = localStorage.getItem('auth_token');
+      const token = typeof window !== "undefined" && localStorage.getItem('auth_token');
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ export default function ApiMonitoringPage() {
   const resolveError = async (errorId: string) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.insighthire.com';
-      const token = localStorage.getItem('auth_token');
+      const token = typeof window !== "undefined" && localStorage.getItem('auth_token');
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

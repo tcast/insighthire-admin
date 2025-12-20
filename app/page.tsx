@@ -10,7 +10,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // Check if admin is logged in
-    const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    const adminToken = typeof window !== 'undefined' ? typeof window !== "undefined" && localStorage.getItem('admin_token') : null;
 
     if (adminToken) {
       // Redirect to organizations dashboard

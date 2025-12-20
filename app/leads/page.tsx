@@ -13,7 +13,7 @@ export default function LeadsPage() {
   const [filter, setFilter] = useState<'all' | 'new' | 'contacted' | 'qualified'>('all');
 
   // Check auth
-  if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
+  if (typeof window !== 'undefined' && !typeof window !== "undefined" && localStorage.getItem('admin_token')) {
     router.push('/login');
     return null;
   }
