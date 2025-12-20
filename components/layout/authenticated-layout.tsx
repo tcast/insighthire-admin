@@ -8,12 +8,13 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+
     // Don't check auth on login page
     if (pathname === '/login') {
-      setIsLoading(false);
       return;
     }
 
@@ -25,27 +26,21 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
     } else {
       setIsAuthenticated(true);
     }
-
-    setIsLoading(false);
   }, [pathname, router]);
+
+  // Prevent hydration mismatch - don't render until mounted
+  if (!isMounted) {
+    return <>{children}</>;
+  }
 
   // Don't show nav on login page
   if (pathname === '/login') {
     return <>{children}</>;
   }
 
-  // Show loading during auth check
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
   // Only show nav when authenticated
   if (!isAuthenticated) {
-    return null;
+    return <>{children}</>;
   }
 
   return (
