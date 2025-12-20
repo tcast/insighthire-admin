@@ -6,7 +6,7 @@ import { Mail, Building2, Activity, BarChart3, Shield, LogOut } from 'lucide-rea
 
 const navItems = [
   { name: 'Organizations', href: '/organizations', icon: Building2 },
-  { name: 'Background Jobs', href: '/jobs', icon: Activity },
+  { name: 'Background Jobs', href: '/background-jobs', icon: Activity },
   { name: 'Leads', href: '/leads', icon: Mail },
   { name: 'API Monitoring', href: '/api-monitoring', icon: BarChart3 },
   { name: 'Audit', href: '/audit', icon: Shield },
