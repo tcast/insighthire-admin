@@ -74,7 +74,7 @@ export default function PlatformAdminOrganizationsPage() {
               )}
               <button
                 onClick={() => {
-                  typeof window !== "undefined" && typeof window !== "undefined" && localStorage.clear();
+                  typeof window !== "undefined" && localStorage.clear();
                   window.location.href = '/login';
                 }}
                 className="text-sm text-red-600 hover:text-red-700"
