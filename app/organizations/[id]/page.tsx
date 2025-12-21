@@ -491,10 +491,10 @@ function JourneyProgressSection({ orgId }: { orgId: string }) {
               {Math.round(parseFloat(session.completionPercentage || 0))}% Complete
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all"
-              style={{ width: `${session.completionPercentage || 0}%` }}
+              style={{ width: `${Math.min(100, Math.max(0, parseFloat(session.completionPercentage || '0')))}%` }}
             />
           </div>
           <p className="text-xs text-gray-500 mt-2">
