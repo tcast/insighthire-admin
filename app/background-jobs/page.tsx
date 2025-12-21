@@ -68,7 +68,7 @@ export default function BackgroundJobsAdmin() {
   });
 
   // Get failed jobs
-  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed, error: failedError } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed, error: failedError } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100, status: 'FAILED' }, {
     enabled: !authLoading && activeTab === 'failed',
     retry: false,
   });
@@ -79,13 +79,13 @@ export default function BackgroundJobsAdmin() {
   }
 
   // Get pending jobs
-  const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+  const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100, status: 'PENDING' }, {
     enabled: !authLoading && activeTab === 'pending',
     retry: false,
   });
 
   // Get completed jobs
-  const { data: completedData, refetch: refetchCompleted, isLoading: loadingCompleted } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+  const { data: completedData, refetch: refetchCompleted, isLoading: loadingCompleted } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100, status: 'COMPLETED' }, {
     enabled: !authLoading && activeTab === 'completed',
     retry: false,
   });
