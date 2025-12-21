@@ -151,14 +151,24 @@ export default function BackgroundJobsAdmin() {
   // Show ALL organizations from system, not just ones with failed jobs
   const allOrganizations = orgsData?.organizations || [];
 
-  // For child dropdowns, only show items from jobs (cascading from org filter)
-  const jobsForDropdowns = filters.organizationId
+  // Cascade: Org → Journey → Assessment/Question
+
+  // Step 1: Filter by org (if selected)
+  const jobsByOrg = filters.organizationId
     ? allJobs.filter(j => j.organizationId === filters.organizationId)
     : allJobs;
 
-  const uniqueQuestions = Array.from(new Set(jobsForDropdowns.map(j => j.questionId).filter(Boolean)));
-  const uniqueAssessments = Array.from(new Set(jobsForDropdowns.map(j => j.assessmentId).filter(Boolean)));
-  const uniqueJourneys = Array.from(new Set(jobsForDropdowns.map(j => j.journeyId).filter(Boolean)));
+  // Step 2: Get unique journeys from org-filtered jobs
+  const uniqueJourneys = Array.from(new Set(jobsByOrg.map(j => j.journeyId).filter(Boolean)));
+
+  // Step 3: Filter by journey (if selected) - only from org-filtered jobs
+  const jobsByJourney = filters.journeyId
+    ? jobsByOrg.filter(j => j.journeyId === filters.journeyId)
+    : jobsByOrg;
+
+  // Step 4: Assessment/Question dropdowns only show items from journey-filtered jobs
+  const uniqueAssessments = Array.from(new Set(jobsByJourney.map(j => j.assessmentId).filter(Boolean)));
+  const uniqueQuestions = Array.from(new Set(jobsByJourney.map(j => j.questionId).filter(Boolean)));
 
   const clearFilters = () => {
     setFilters({
@@ -291,22 +301,22 @@ export default function BackgroundJobsAdmin() {
             </select>
           </div>
 
-          {/* Question */}
+          {/* Journey */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Question ({uniqueQuestions.length})
+              Journey ({uniqueJourneys.length})
             </label>
             <select
-              value={filters.questionId}
-              onChange={(e) => setFilters(prev => ({ ...prev, questionId: e.target.value }))}
+              value={filters.journeyId}
+              onChange={(e) => setFilters(prev => ({ ...prev, journeyId: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
             >
-              <option value="" className="text-gray-900">All Questions</option>
-              {uniqueQuestions.map(qId => {
-                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.questionId === qId);
+              <option value="" className="text-gray-900">All Journeys</option>
+              {uniqueJourneys.map(jId => {
+                const job = allJobs.find(j => j.journeyId === jId);
                 return (
-                  <option key={qId} value={qId}>
-                    {job?.questionText?.substring(0, 50) || qId}...
+                  <option key={jId} value={jId}>
+                    {job?.journeyName || jId}
                   </option>
                 );
               })}
@@ -322,10 +332,13 @@ export default function BackgroundJobsAdmin() {
               value={filters.assessmentId}
               onChange={(e) => setFilters(prev => ({ ...prev, assessmentId: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
+              disabled={!filters.journeyId}
             >
-              <option value="" className="text-gray-900">All Assessments</option>
+              <option value="" className="text-gray-900">
+                {filters.journeyId ? 'All Assessments' : 'Select Journey First'}
+              </option>
               {uniqueAssessments.map(aId => {
-                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.assessmentId === aId);
+                const job = allJobs.find(j => j.assessmentId === aId);
                 return (
                   <option key={aId} value={aId}>
                     {job?.assessmentName || aId}
@@ -335,22 +348,25 @@ export default function BackgroundJobsAdmin() {
             </select>
           </div>
 
-          {/* Journey */}
+          {/* Question (Interview) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Journey ({uniqueJourneys.length})
+              Interview Question ({uniqueQuestions.length})
             </label>
             <select
-              value={filters.journeyId}
-              onChange={(e) => setFilters(prev => ({ ...prev, journeyId: e.target.value }))}
+              value={filters.questionId}
+              onChange={(e) => setFilters(prev => ({ ...prev, questionId: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
+              disabled={!filters.journeyId}
             >
-              <option value="" className="text-gray-900">All Journeys</option>
-              {uniqueJourneys.map(jId => {
-                const job = (failedData?.jobs as FailedJob[] || []).find(j => j.journeyId === jId);
+              <option value="" className="text-gray-900">
+                {filters.journeyId ? 'All Questions' : 'Select Journey First'}
+              </option>
+              {uniqueQuestions.map(qId => {
+                const job = allJobs.find(j => j.questionId === qId);
                 return (
-                  <option key={jId} value={jId}>
-                    {job?.journeyName || jId}
+                  <option key={qId} value={qId}>
+                    {job?.questionText?.substring(0, 50) || qId}...
                   </option>
                 );
               })}
