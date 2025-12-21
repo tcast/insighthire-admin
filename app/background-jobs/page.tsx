@@ -451,36 +451,60 @@ export default function BackgroundJobsAdmin() {
 
       {/* Pending Jobs */}
       {activeTab === 'pending' && (
-        <div className="bg-white shadow rounded-lg">
+        <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium">Pending Jobs</h2>
+            <h2 className="text-lg font-medium">Pending Jobs ({filteredPendingJobs.length})</h2>
             <p className="text-sm text-gray-500">Jobs waiting to be processed by background workers</p>
           </div>
-          <div className="px-6 py-8">
-            {loadingPending ? (
-              <p className="text-center text-gray-500">Loading pending jobs...</p>
-            ) : filteredPendingJobs.length > 0 ? (
-              <div className="space-y-4">
-                {filteredPendingJobs.map(job => (
-                  <div key={job.id} className="border-l-4 border-yellow-400 bg-yellow-50 p-4">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-medium">{job.candidateName}</p>
-                        <p className="text-sm text-gray-600">{job.questionText?.substring(0, 80)}...</p>
-                        <div className="mt-2 space-y-1 text-xs text-gray-600">
-                          {job.organizationName && <p>🏢 {job.organizationName}</p>}
-                          {job.positionTitle && <p>💼 {job.positionTitle}</p>}
-                          {job.journeyName && <p>🗺️ {job.journeyName}</p>}
+          {loadingPending ? (
+            <div className="px-6 py-8 text-center text-gray-500">
+              <p>Loading pending jobs...</p>
+            </div>
+          ) : filteredPendingJobs.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidate</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organization</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Question/Assessment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {filteredPendingJobs.map(job => (
+                    <tr key={job.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                          {job.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{job.candidateName}</div>
+                        {job.candidateEmail && <div className="text-sm text-gray-500">{job.candidateEmail}</div>}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {job.organizationName || 'Unknown'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 max-w-md truncate">
+                          {job.assessmentName || job.questionText || 'N/A'}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-500">✅ No pending jobs - all caught up!</p>
-            )}
-          </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {job.failedAt ? new Date(job.failedAt).toLocaleString() : 'N/A'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="px-6 py-8 text-center text-gray-500">
+              <p>✅ No pending jobs - all caught up!</p>
+            </div>
+          )}
         </div>
       )}
 
