@@ -68,10 +68,15 @@ export default function BackgroundJobsAdmin() {
   });
 
   // Get failed jobs
-  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
+  const { data: failedData, refetch: refetchFailed, isLoading: loadingFailed, error: failedError } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
     enabled: !authLoading && activeTab === 'failed',
     retry: false,
   });
+
+  // DEBUG: Log errors
+  if (failedError) {
+    console.error('❌ Failed jobs error:', failedError);
+  }
 
   // Get pending jobs
   const { data: pendingData, refetch: refetchPending, isLoading: loadingPending } = trpc.platformAdmin.getFailedJobs.useQuery({ queue: 'all', limit: 100 }, {
