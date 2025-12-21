@@ -97,6 +97,34 @@ export default function OrganizationDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Positions Overview */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Positions</h2>
+                <Link
+                  href={`/organizations/${orgId}/positions`}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View All →
+                </Link>
+              </div>
+              <PositionsSection orgId={orgId} />
+            </div>
+
+            {/* Journey Progress */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Active Journeys</h2>
+                <Link
+                  href={`/organizations/${orgId}/journeys`}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View All →
+                </Link>
+              </div>
+              <JourneyProgressSection orgId={orgId} />
+            </div>
+
             {/* Usage Stats */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Usage Statistics</h2>
@@ -384,6 +412,96 @@ export default function OrganizationDetailPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PositionsSection({ orgId }: { orgId: string }) {
+  const { data } = trpc.platformAdmin.getOrganizationPositions.useQuery({
+    organizationId: orgId,
+    limit: 5
+  });
+
+  if (!data || data.positions.length === 0) {
+    return <p className="text-sm text-gray-500">No positions created yet</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {data.positions.map((position: any) => (
+        <div key={position.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">{position.title}</h3>
+              <p className="text-sm text-gray-500">{position.department} • {position.location}</p>
+              <div className="mt-2 flex items-center space-x-4">
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  position.status === 'OPEN' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {position.status}
+                </span>
+                {position.targetHires && (
+                  <span className="text-xs text-gray-600">
+                    Target: {position.currentHires || 0}/{position.targetHires} hires
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-6 text-sm">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-gray-900">{position._count.candidate_profiles}</p>
+                <p className="text-xs text-gray-500">Candidates</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{position._count.applications}</p>
+                <p className="text-xs text-gray-500">Applications</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function JourneyProgressSection({ orgId }: { orgId: string }) {
+  // Query for journey sessions with progress data
+  const { data } = trpc.platformAdmin.getOrganizationJourneySessions.useQuery({
+    organizationId: orgId,
+    limit: 5,
+    status: 'IN_PROGRESS'
+  }, {
+    retry: false
+  });
+
+  if (!data || !data.sessions || data.sessions.length === 0) {
+    return <p className="text-sm text-gray-500">No active journeys</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {data.sessions.map((session: any) => (
+        <div key={session.id} className="border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="font-medium text-gray-900">{session.candidateName}</h3>
+              <p className="text-sm text-gray-500">{session.journeyName || session.positionTitle}</p>
+            </div>
+            <span className="text-sm font-semibold text-blue-600">
+              {Math.round(parseFloat(session.completionPercentage || 0))}% Complete
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all"
+              style={{ width: `${session.completionPercentage || 0}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Started {new Date(session.startedAt).toLocaleDateString()}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
