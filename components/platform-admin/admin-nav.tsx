@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Mail, Building2, Activity, BarChart3, Shield, LogOut } from 'lucide-react';
+import { Mail, Building2, Activity, BarChart3, Shield, LogOut, AlertTriangle, MapPin } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
 
 const navItems = [
   { name: 'Organizations', href: '/organizations', icon: Building2 },
+  { name: 'Stuck Candidates', href: '/stuck-candidates', icon: AlertTriangle, hasBadge: true },
+  { name: 'Location Anomalies', href: '/anomalies', icon: MapPin, hasAnomalyBadge: true },
   { name: 'Background Jobs', href: '/background-jobs', icon: Activity },
   { name: 'Leads', href: '/leads', icon: Mail },
   { name: 'API Monitoring', href: '/api-monitoring', icon: BarChart3 },
@@ -15,6 +18,15 @@ const navItems = [
 export function PlatformAdminNav() {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Fetch health summary for badge count
+  const { data: healthData } = trpc.platformAdmin.getJourneyHealthSummary.useQuery(
+    undefined,
+    { refetchInterval: 30000, retry: false }
+  );
+
+  const alertCount = healthData?.alerts?.total || 0;
+  const anomalyCount = healthData?.metrics?.locationAnomalies || 0;
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -38,20 +50,28 @@ export function PlatformAdminNav() {
               {navItems.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
                 const Icon = item.icon;
+                const showAlertBadge = (item as any).hasBadge && alertCount > 0;
+                const showAnomalyBadge = (item as any).hasAnomalyBadge && anomalyCount > 0;
+                const badgeCount = showAlertBadge ? alertCount : showAnomalyBadge ? anomalyCount : 0;
 
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={`
-                      flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      relative flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       ${isActive
                         ? 'bg-gray-800 text-white'
                         : 'text-gray-300 hover:bg-gray-800 hover:text-white'}
                     `}
                   >
-                    <Icon className="h-4 w-4 mr-2" />
+                    <Icon className={`h-4 w-4 mr-2 ${(showAlertBadge || showAnomalyBadge) ? 'text-red-400' : ''}`} />
                     {item.name}
+                    {(showAlertBadge || showAnomalyBadge) && (
+                      <span className={`absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white ${showAnomalyBadge ? 'bg-amber-500' : 'bg-red-500'}`}>
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

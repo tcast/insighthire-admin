@@ -262,6 +262,52 @@ export default function CandidateDetailPage() {
               </div>
             )}
 
+            {/* Location Anomalies Alert */}
+            {journeyData.locationAnomalies && journeyData.locationAnomalies.length > 0 && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-red-600" />
+                    <span className="text-sm font-bold text-red-800">⚠️ Location Anomaly Detected</span>
+                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                      {journeyData.locationAnomalies.length} alert{journeyData.locationAnomalies.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <p className="text-xs text-red-700 mb-3">
+                    Suspicious location changes detected - candidate may be using VPN or sharing credentials.
+                  </p>
+                  <div className="space-y-2">
+                    {journeyData.locationAnomalies.map((anomaly: any, index: number) => {
+                      const meta = anomaly.metadata as any;
+                      return (
+                        <div key={index} className="bg-white border border-red-100 rounded p-3 text-xs">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-gray-900">
+                              {new Date(anomaly.createdAt).toLocaleString()}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded ${
+                              meta?.severity === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {meta?.severity || 'medium'} severity
+                            </span>
+                          </div>
+                          <div className="text-gray-700">
+                            <span className="font-medium">{meta?.previousLocation?.city || meta?.previousLocation?.country || 'Unknown'}</span>
+                            <span className="mx-2">→</span>
+                            <span className="font-medium">{meta?.currentLocation?.city || meta?.currentLocation?.country || 'Unknown'}</span>
+                            <span className="ml-2 text-red-600">({meta?.distanceKm?.toLocaleString()}km jump)</span>
+                          </div>
+                          <div className="mt-1 text-gray-500">
+                            IP: {anomaly.ipAddress}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Page Visit History */}
             {journeyData.pageVisits && journeyData.pageVisits.length > 0 && (
               <div className="mt-6 pt-6 border-t">
@@ -271,26 +317,35 @@ export default function CandidateDetailPage() {
                   <span className="text-xs text-gray-500">({journeyData.pageVisits.length} visits)</span>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {journeyData.pageVisits.map((visit: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-gray-900 font-medium">
-                          {new Date(visit.createdAt).toLocaleString()}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                          (visit.metadata as any)?.deviceType === 'mobile' ? 'bg-purple-100 text-purple-700' :
-                          (visit.metadata as any)?.deviceType === 'tablet' ? 'bg-blue-100 text-blue-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {(visit.metadata as any)?.deviceType || 'unknown'}
-                        </span>
-                        {(visit.metadata as any)?.page && (
-                          <span className="text-gray-500">{(visit.metadata as any).page}</span>
-                        )}
+                  {journeyData.pageVisits.map((visit: any, index: number) => {
+                    const meta = visit.metadata as any;
+                    const location = meta?.geoLocation;
+                    return (
+                      <div key={index} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-gray-900 font-medium">
+                            {new Date(visit.createdAt).toLocaleString()}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            meta?.deviceType === 'mobile' ? 'bg-purple-100 text-purple-700' :
+                            meta?.deviceType === 'tablet' ? 'bg-blue-100 text-blue-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {meta?.deviceType || 'unknown'}
+                          </span>
+                          {location?.city && (
+                            <span className="text-gray-600">
+                              📍 {location.city}, {location.region || location.country}
+                            </span>
+                          )}
+                          {meta?.page && (
+                            <span className="text-gray-500">{meta.page}</span>
+                          )}
+                        </div>
+                        <span className="text-gray-400 font-mono">{visit.ipAddress}</span>
                       </div>
-                      <span className="text-gray-400 font-mono">{visit.ipAddress}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
