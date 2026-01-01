@@ -51,9 +51,9 @@ export default function OrganizationJourneysPage() {
             <select
               value={statusFilter || ''}
               onChange={(e) => setStatusFilter(e.target.value as any || undefined)}
-              className="px-3 py-2 border rounded-lg text-sm"
+              className="px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white"
             >
-              <option value="">All Statuses</option>
+              <option value="" className="text-gray-900">All Statuses</option>
               <option value="IN_PROGRESS">In Progress</option>
               <option value="COMPLETED">Completed</option>
               <option value="ABANDONED">Abandoned</option>
