@@ -241,9 +241,64 @@ export default function CandidateDetailPage() {
                     <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                   </a>
                 </div>
-                <p className="mt-2 text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded truncate">
-                  {journeyData.candidateJourneyUrl}
-                </p>
+                <div className="mt-2 flex items-center space-x-2">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={journeyData.candidateJourneyUrl}
+                    className="flex-1 text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded border-0"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(journeyData.candidateJourneyUrl!);
+                      alert('Link copied!');
+                    }}
+                    className="px-3 py-2 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Page Visit History */}
+            {journeyData.pageVisits && journeyData.pageVisits.length > 0 && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center space-x-2 mb-3">
+                  <ClockIcon className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Page Visit History</span>
+                  <span className="text-xs text-gray-500">({journeyData.pageVisits.length} visits)</span>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {journeyData.pageVisits.map((visit: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between text-xs bg-gray-50 p-2 rounded">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-gray-900 font-medium">
+                          {new Date(visit.createdAt).toLocaleString()}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-xs ${
+                          (visit.metadata as any)?.deviceType === 'mobile' ? 'bg-purple-100 text-purple-700' :
+                          (visit.metadata as any)?.deviceType === 'tablet' ? 'bg-blue-100 text-blue-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {(visit.metadata as any)?.deviceType || 'unknown'}
+                        </span>
+                        {(visit.metadata as any)?.page && (
+                          <span className="text-gray-500">{(visit.metadata as any).page}</span>
+                        )}
+                      </div>
+                      <span className="text-gray-400 font-mono">{visit.ipAddress}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* No visits yet message */}
+            {journeyData.candidateJourneyUrl && (!journeyData.pageVisits || journeyData.pageVisits.length === 0) && (
+              <div className="mt-4 text-xs text-gray-500 italic">
+                No page visits recorded yet
               </div>
             )}
 
