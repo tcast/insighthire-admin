@@ -298,9 +298,12 @@ export default function StuckCandidatesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-sm font-medium text-gray-900">
+                        <a 
+                          href={`/candidate/${candidate.candidateId}`}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
                           {candidate.candidateName}
-                        </h3>
+                        </a>
                         {getStuckReasonBadge(candidate.stuckReason)}
                       </div>
                       {candidate.candidateEmail && (
@@ -355,6 +358,12 @@ export default function StuckCandidatesPage() {
                     </div>
 
                     <div className="flex items-center space-x-2 ml-4">
+                      <a
+                        href={`/candidate/${candidate.candidateId}`}
+                        className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md flex items-center space-x-1"
+                      >
+                        <span>View Details</span>
+                      </a>
                       <button
                         onClick={() => setExpandedCandidate(
                           expandedCandidate === candidate.candidateId ? null : candidate.candidateId

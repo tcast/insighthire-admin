@@ -185,7 +185,11 @@ export default function DashboardPage() {
           </div>
           <div className="divide-y divide-gray-100">
             {stuckData.candidates.slice(0, 5).map((candidate: any) => (
-              <div key={candidate.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+              <Link 
+                key={candidate.id} 
+                href={`/candidate/${candidate.candidateId}`}
+                className="px-6 py-4 flex items-center justify-between hover:bg-blue-50 cursor-pointer transition-colors block"
+              >
                 <div className="flex items-center space-x-4">
                   <div className={`p-2 rounded-full ${
                     candidate.stuckReason === 'failed_processing' ? 'bg-red-100' :
@@ -198,7 +202,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{candidate.candidateName}</p>
+                    <p className="font-medium text-blue-600">{candidate.candidateName}</p>
                     <p className="text-sm text-gray-500">
                       {candidate.journeyName} • {candidate.organizationName}
                     </p>
@@ -215,7 +219,7 @@ export default function DashboardPage() {
                   </span>
                   <p className="text-xs text-gray-500 mt-1">{candidate.completionPercentage}% complete</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

@@ -78,10 +78,14 @@ export default function OrganizationJourneysPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {data.sessions.map((session: any) => (
-                  <tr key={session.id} className="hover:bg-gray-50">
+                  <tr 
+                    key={session.id} 
+                    className="hover:bg-blue-50 cursor-pointer transition-colors"
+                    onClick={() => window.location.href = `/candidate/${session.candidateId}`}
+                  >
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{session.candidateName}</div>
-                      <div className="text-xs text-gray-500">{session.id}</div>
+                      <div className="text-sm font-medium text-blue-600 hover:text-blue-800">{session.candidateName}</div>
+                      <div className="text-xs text-gray-500">{session.candidateId?.slice(0, 8)}...</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">{session.journeyName || 'N/A'}</div>
