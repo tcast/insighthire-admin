@@ -318,6 +318,16 @@ export default function CandidateDetailPage() {
                         {node.hasFailed && (
                           <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
                         )}
+                        {/* Show score for completed nodes */}
+                        {node.status === 'completed' && node.averageScore !== null && (
+                          <span className={`px-2 py-1 text-sm font-bold rounded ${
+                            node.averageScore >= 80 ? 'bg-green-100 text-green-700' :
+                            node.averageScore >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {node.averageScore}%
+                          </span>
+                        )}
                         {getStatusBadge(node.status, node.hasFailed)}
                         {hasPipeline && (
                           <div className="text-gray-400">
@@ -338,7 +348,7 @@ export default function CandidateDetailPage() {
                           {node.processingPipeline.map((item: any) => (
                             <div key={item.id} className="bg-white rounded-lg border p-4">
                               <div className="flex items-center justify-between mb-3">
-                                <div>
+                                <div className="flex-1">
                                   <span className={`px-2 py-1 text-xs font-medium rounded ${
                                     item.type === 'interview' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                                   }`}>
@@ -346,14 +356,26 @@ export default function CandidateDetailPage() {
                                   </span>
                                   <p className="text-sm text-gray-700 mt-1">{item.questionText}</p>
                                 </div>
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                  item.processingStatus === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                  item.processingStatus === 'FAILED' ? 'bg-red-100 text-red-700' :
-                                  item.processingStatus === 'PROCESSING' ? 'bg-yellow-100 text-yellow-700' :
-                                  'bg-gray-100 text-gray-600'
-                                }`}>
-                                  {item.processingStatus}
-                                </span>
+                                <div className="flex items-center space-x-2 ml-4">
+                                  {/* Individual score */}
+                                  {item.score !== null && item.score !== undefined && (
+                                    <span className={`px-3 py-1 text-sm font-bold rounded ${
+                                      item.score >= 80 ? 'bg-green-100 text-green-700' :
+                                      item.score >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-red-100 text-red-700'
+                                    }`}>
+                                      {Math.round(item.score)}%
+                                    </span>
+                                  )}
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    item.processingStatus === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                    item.processingStatus === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                    item.processingStatus === 'PROCESSING' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {item.processingStatus}
+                                  </span>
+                                </div>
                               </div>
 
                               {/* Pipeline Steps */}
