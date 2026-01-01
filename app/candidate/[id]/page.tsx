@@ -17,6 +17,8 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
+  LinkIcon,
+  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
@@ -221,6 +223,30 @@ export default function CandidateDetailPage() {
               )}
             </div>
             
+            {/* Candidate Journey Link */}
+            {journeyData.candidateJourneyUrl && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <LinkIcon className="h-5 w-5 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700">Candidate Journey Link</span>
+                  </div>
+                  <a
+                    href={journeyData.candidateJourneyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <span>View as Candidate</span>
+                    <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                  </a>
+                </div>
+                <p className="mt-2 text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded truncate">
+                  {journeyData.candidateJourneyUrl}
+                </p>
+              </div>
+            )}
+
             {/* Progress Bar */}
             <div className="mt-6 pt-6 border-t">
               <div className="flex items-center justify-between mb-2">
