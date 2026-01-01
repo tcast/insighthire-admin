@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { useAdminAuth } from '@/lib/use-admin-auth';
@@ -18,20 +18,6 @@ export default function PlatformAdminOrganizationsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [planFilter, setPlanFilter] = useState<string>('');
-  const [adminEmail, setAdminEmail] = useState<string>('');
-
-  // Load admin email from localStorage safely
-  useEffect(() => {
-    const user = localStorage.getItem('admin_user');
-    if (user) {
-      try {
-        const parsed = JSON.parse(user);
-        setAdminEmail(parsed.email || '');
-      } catch (e) {
-        console.error('Failed to parse admin_user');
-      }
-    }
-  }, []);
 
   const { data, isLoading, error } = trpc.platformAdmin.listOrganizations.useQuery({
     page: 1,
@@ -65,22 +51,6 @@ export default function PlatformAdminOrganizationsPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
                 <p className="text-sm text-gray-600">Platform Administration</p>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {adminEmail && (
-                <span className="text-sm text-gray-600">
-                  👤 {adminEmail}
-                </span>
-              )}
-              <button
-                onClick={() => {
-                  typeof window !== "undefined" && localStorage.clear();
-                  window.location.href = '/login';
-                }}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Logout
-              </button>
             </div>
           </div>
         </div>
