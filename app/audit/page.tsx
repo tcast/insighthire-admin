@@ -135,13 +135,13 @@ export default function AuditLogsPage() {
                       Timestamp
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Admin
+                      User
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Action
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Target
+                      Resource
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Details
@@ -168,10 +168,10 @@ export default function AuditLogsPage() {
                             <UserCircleIcon className="h-8 w-8 text-gray-400 mr-3" />
                             <div>
                               <div className="text-sm font-medium text-gray-900">
-                                {log.adminUser?.name || log.adminUser?.email || 'Unknown'}
+                                {log.user?.name || log.user?.email || 'System'}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {log.adminUser?.email || log.adminUserId}
+                                {log.user?.email || 'No user'}
                               </div>
                             </div>
                           </div>
@@ -185,20 +185,17 @@ export default function AuditLogsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          {log.targetOrg ? (
-                            <div className="flex items-center">
-                              <BuildingOfficeIcon className="h-4 w-4 text-gray-400 mr-2" />
-                              <span className="text-sm text-gray-900">{log.targetOrg.name}</span>
+                          {log.resource ? (
+                            <div>
+                              <span className="text-sm text-gray-900 capitalize">{log.resource.replace(/_/g, ' ')}</span>
+                              {log.resourceId && (
+                                <div className="text-xs text-gray-500 font-mono mt-1">
+                                  {log.resourceId.slice(0, 12)}...
+                                </div>
+                              )}
                             </div>
-                          ) : log.targetOrgId ? (
-                            <span className="text-xs text-gray-500 font-mono">{log.targetOrgId}</span>
                           ) : (
                             <span className="text-xs text-gray-400">—</span>
-                          )}
-                          {log.targetUserId && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              User: {log.targetUserId.slice(0, 8)}...
-                            </div>
                           )}
                         </td>
                         <td className="px-4 py-4">
