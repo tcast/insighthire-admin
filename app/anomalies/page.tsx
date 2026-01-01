@@ -51,7 +51,7 @@ export default function AnomaliesPage() {
             <select 
               value={daysBack}
               onChange={(e) => setDaysBack(Number(e.target.value))}
-              className="border rounded-lg px-3 py-2 text-sm"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             >
               <option value={1}>24 hours</option>
               <option value={7}>7 days</option>
