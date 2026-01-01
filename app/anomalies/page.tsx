@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '@/utils/api';
+import { trpc } from '@/lib/trpc';
 import { AuthenticatedLayout } from '@/components/layout/authenticated-layout';
 import { 
   ExclamationTriangleIcon, 
@@ -14,12 +14,12 @@ import Link from 'next/link';
 export default function AnomaliesPage() {
   const [daysBack, setDaysBack] = useState(7);
   
-  const { data, isLoading, refetch } = api.platformAdmin.getLocationAnomalies.useQuery({
+  const { data, isLoading, refetch } = trpc.platformAdmin.getLocationAnomalies.useQuery({
     daysBack,
     limit: 100,
   });
 
-  const dismissMutation = api.platformAdmin.dismissAnomaly.useMutation({
+  const dismissMutation = trpc.platformAdmin.dismissAnomaly.useMutation({
     onSuccess: () => {
       refetch();
     }
