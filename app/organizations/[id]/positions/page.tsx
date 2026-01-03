@@ -13,13 +13,18 @@ export default function OrganizationPositionsPage() {
   const orgId = params.id as string;
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
 
-  const { data, isLoading } = trpc.platformAdmin.getOrganizationPositions.useQuery({
+  const { data, isLoading, error } = trpc.platformAdmin.getOrganizationPositions.useQuery({
     organizationId: orgId,
     limit: 100
   }, {
     enabled: !authLoading,
-    retry: false
+    retry: 1,
+    onError: (err) => console.error('Positions query error:', err),
+    onSuccess: (data) => console.log('Positions loaded:', data),
   });
+
+  // Debug logging
+  console.log('Positions page state:', { orgId, data, isLoading, error, authLoading });
 
   const { data: orgData } = trpc.platformAdmin.getOrganization.useQuery({ id: orgId }, {
     enabled: !authLoading,
@@ -69,6 +74,12 @@ export default function OrganizationPositionsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-800 font-medium">Error loading positions</p>
+            <p className="text-red-600 text-sm">{error.message}</p>
+          </div>
+        )}
         {filteredPositions.length > 0 ? (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
