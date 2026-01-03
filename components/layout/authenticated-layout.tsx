@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { PlatformAdminNav } from '../platform-admin/admin-nav';
+import { AlertBanner } from './alert-banner';
 
 export function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -35,6 +36,7 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-gray-50">
       <div style={{ display: showNav ? 'block' : 'none' }} suppressHydrationWarning>
+        <AlertBanner />
         <PlatformAdminNav />
       </div>
       {children}
