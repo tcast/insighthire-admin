@@ -97,7 +97,11 @@ export default function OrganizationJourneysPage() {
                       <div className="flex items-center space-x-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2 w-24">
                           <div
-                            className="bg-blue-600 h-2 rounded-full"
+                            className={`h-2 rounded-full ${
+                              session.status === 'COMPLETED' ? 'bg-green-600' :
+                              session.status === 'ABANDONED' ? 'bg-red-600' :
+                              'bg-blue-600'
+                            }`}
                             style={{ width: `${Math.min(100, parseFloat(session.completionPercentage || '0'))}%` }}
                           />
                         </div>
@@ -105,6 +109,11 @@ export default function OrganizationJourneysPage() {
                           {Math.round(parseFloat(session.completionPercentage || '0'))}%
                         </span>
                       </div>
+                      {session.completedSteps !== undefined && session.totalSteps !== undefined && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {session.completedSteps} / {session.totalSteps} steps
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full ${
